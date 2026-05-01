@@ -2608,7 +2608,7 @@ export default function App() {
             if (m > maxMs) maxMs = m;
             prevSlMonthlyHashes.current[docSnap.id] = d?.ordersJson || "";
           });
-          if ((slFirstLoad || (maxMs > lR.current && maxMs > lL.current)) && !applying.current) {
+          if (slFirstLoad || ((maxMs > lR.current && maxMs > lL.current) && !applying.current)) {
             slFirstLoad = false;
         applying.current = true;
             setSlOrders(all);
@@ -2644,7 +2644,7 @@ export default function App() {
             if (m > maxMs) maxMs = m;
             prevSpMonthlyHashes.current[docSnap.id] = d?.ordersJson || "";
           });
-          if ((spFirstLoad || (maxMs > lR.current && maxMs > lL.current)) && !applying.current) {
+          if (spFirstLoad || ((maxMs > lR.current && maxMs > lL.current) && !applying.current)) {
             spFirstLoad = false;
         applying.current = true;
             setSpOrders(all);
