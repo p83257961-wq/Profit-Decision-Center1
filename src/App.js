@@ -2517,6 +2517,7 @@ export default function App() {
     );
 
     // 官網月份 collection 監聽
+    let slFirstLoad = true;
     const unSl = onSnapshot(
       fRef.current._slMonthlyColl,
       (snapshot) => {
@@ -2534,10 +2535,11 @@ export default function App() {
             if (m > maxMs) maxMs = m;
             prevSlMonthlyHashes.current[docSnap.id] = d?.ordersJson || "";
           });
-          if (maxMs > lR.current && maxMs > lL.current && !applying.current) {
-            applying.current = true;
+          if ((slFirstLoad || maxMs > lR.current) && maxMs > lL.current && !applying.current) {
+            slFirstLoad = false;
+        applying.current = true;
             setSlOrders(all);
-            lR.current = maxMs;
+            if (maxMs > lR.current) lR.current = maxMs;
             setLastSyncAt(Date.now());
             setTimeout(() => {
               applying.current = false;
@@ -2551,6 +2553,7 @@ export default function App() {
     );
 
     // 蝦皮月份 collection 監聽
+    let spFirstLoad = true;
     const unSp = onSnapshot(
       fRef.current._spMonthlyColl,
       (snapshot) => {
@@ -2568,10 +2571,11 @@ export default function App() {
             if (m > maxMs) maxMs = m;
             prevSpMonthlyHashes.current[docSnap.id] = d?.ordersJson || "";
           });
-          if (maxMs > lR.current && maxMs > lL.current && !applying.current) {
-            applying.current = true;
+          if ((spFirstLoad || maxMs > lR.current) && maxMs > lL.current && !applying.current) {
+            spFirstLoad = false;
+        applying.current = true;
             setSpOrders(all);
-            lR.current = maxMs;
+            if (maxMs > lR.current) lR.current = maxMs;
             setLastSyncAt(Date.now());
             setTimeout(() => {
               applying.current = false;
