@@ -2479,6 +2479,79 @@ export default function App() {
       }
     };
 
+
+    // === LEGACY DATA RESTORE (manual via DevTools) ===
+    // Usage in browser console:
+    //   window.forceLegacyRestore()           -> inspect legacy docs only
+    //   window.forceLegacyRestore("apply")   -> write legacy orders into monthly collections
+    window.forceLegacyRestore = async (mode) => {
+      try {
+        console.log("[Restore] mode:", mode || "inspect");
+        const slOldSnap = await getDoc(fRef.current._slOrdDoc);
+        const spOldSnap = await getDoc(fRef.current._spOrdDoc);
+        const slOldRaw = slOldSnap.exists() ? slOldSnap.data() : null;
+        const spOldRaw = spOldSnap.exists() ? spOldSnap.data() : null;
+        const parse = (raw) => {
+          if (!raw) return null;
+          if (raw.ordersJson) {
+            try { return JSON.parse(raw.ordersJson); } catch { return null; }
+          }
+          return raw.orders || null;
+        };
+        const slOrders = parse(slOldRaw) || {};
+        const spOrders = parse(spOldRaw) || {};
+        const slCount = Object.keys(slOrders).length;
+        const spCount = Object.keys(spOrders).length;
+        const sample = (obj) =>
+          Object.entries(obj)
+            .slice(0, 2)
+            .map(([k, v]) => ({
+              k: k.length > 60 ? k.slice(0, 60) + "..." : k,
+              vType: typeof v,
+              vKeys: v && typeof v === "object" ? Object.keys(v).slice(0, 8) : null,
+            }));
+        const slSample = sample(slOrders);
+        const spSample = sample(spOrders);
+        console.log("[Restore] sl legacy count:", slCount, "sample:", slSample);
+        console.log("[Restore] sp legacy count:", spCount, "sample:", spSample);
+        if (mode !== "apply") {
+          console.log("[Restore] inspect-only. Run forceLegacyRestore('apply') to write monthly docs.");
+          return { slCount, spCount, slSample, spSample };
+        }
+        if (!window.confirm("Will write " + slCount + " SL + " + spCount + " SP orders into monthly collections. Proceed?")) return;
+        const slByMonth = groupOrdersByMonth(slOrders);
+        const spByMonth = groupOrdersByMonth(spOrders);
+        const ms = Date.now();
+        const writes = [];
+        for (const [ym, orders] of Object.entries(slByMonth)) {
+          writes.push(
+            setDoc(doc(fRef.current._db, SL_MONTHLY_COLL, ym), {
+              ordersJson: JSON.stringify(orders),
+              count: Object.keys(orders).length,
+              updatedAtMs: ms,
+            })
+          );
+        }
+        for (const [ym, orders] of Object.entries(spByMonth)) {
+          writes.push(
+            setDoc(doc(fRef.current._db, SP_MONTHLY_COLL, ym), {
+              ordersJson: JSON.stringify(orders),
+              count: Object.keys(orders).length,
+              updatedAtMs: ms,
+            })
+          );
+        }
+        await Promise.all(writes);
+        setSlOrders(slOrders);
+        setSpOrders(spOrders);
+        console.log("[Restore] DONE. Wrote", writes.length, "monthly docs.");
+        return { wrote: writes.length, slCount, spCount };
+      } catch (e) {
+        console.error("[Restore] error:", e);
+        return { error: e.message };
+      }
+    };
+    // === END LEGACY DATA RESTORE ===
     // meta 監聽
     const unMeta = onSnapshot(
       cDoc.current,
