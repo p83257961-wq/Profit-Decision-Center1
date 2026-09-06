@@ -601,6 +601,18 @@ tr.rl:hover td{background:var(--row-loss)!important;}
   .hero-pct-md{font-size:24px;}
   /* Hero 右側那組（淨利率／目標）換行後靠左，才和上面的大字切齊 */
   .hero-side{text-align:left!important;}
+  /* 統計卡：手機改兩欄（原本 ≤600px 是一欄，一張卡吃滿整個寬度＝官網 11 張卡要滑 1,300px）。
+     卡內字級跟著降一級才塞得下：數字 30→20／26→19、標籤 12→11、說明 11→10。
+     g3 若剛好 3 張，最後一張跨兩欄補滿，不留半張空位。
+     選擇器要寫 .page-wrap 開頭，否則上面那幾條卡片內距規則（.page-wrap [style*=...]）
+     特異度較高會蓋掉這裡的 padding。 */
+  .page-wrap .g4,.page-wrap .g3{grid-template-columns:repeat(2,1fr)!important;gap:8px!important;}
+  .page-wrap .g4>div,.page-wrap .g3>div{padding:12px 10px!important;border-radius:12px!important;}
+  .page-wrap .g3>div:nth-child(3):last-child{grid-column:span 2;}
+  .page-wrap .g4 [style*="font-size: 30px"],.page-wrap .g3 [style*="font-size: 30px"]{font-size:20px!important;letter-spacing:-0.04em!important;}
+  .page-wrap .g4 [style*="font-size: 26px"],.page-wrap .g3 [style*="font-size: 26px"]{font-size:19px!important;letter-spacing:-0.04em!important;}
+  .page-wrap .g4 [style*="font-size: 12px"],.page-wrap .g3 [style*="font-size: 12px"]{font-size:11px!important;}
+  .page-wrap .g4 [style*="font-size: 11px"],.page-wrap .g3 [style*="font-size: 11px"]{font-size:10px!important;line-height:1.5!important;}
   /* 匯入報表、重置本期＝手機不做的事 */
   .imp-zone,.reset-row{display:none!important;}
   /* 參數側欄移到資料下面（手機一進來先看到數字，不是設定） */
