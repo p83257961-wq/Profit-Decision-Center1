@@ -611,10 +611,17 @@ tr.rl:hover td{background:var(--row-loss)!important;}
   .trend-legend{flex-wrap:wrap!important;gap:4px 12px!important;}
   .trend-legend>span{white-space:nowrap;}
   /* 寬表格：手機隱藏次要欄並解除 minWidth，讓主要欄位擠進畫面 */
+  .tb-ov th,.tb-ov td,.tb-ch th,.tb-ch td,.tb-ord th,.tb-ord td,.tb-ord-sl th,.tb-ord-sl td,.tb-ord-sp th,.tb-ord-sp td{padding-left:6px!important;padding-right:6px!important;}
+  /* 六通路表只留 通路／營收／佔全公司／淨利率——不用右滑就看得到淨利率（09-06 手機實測補的） */
   .tb-ov{min-width:0!important;}
-  .tb-ov th:nth-child(5),.tb-ov td:nth-child(5),.tb-ov th:nth-child(8),.tb-ov td:nth-child(8){display:none;}
+  .tb-ov th:nth-child(4),.tb-ov td:nth-child(4),.tb-ov th:nth-child(5),.tb-ov td:nth-child(5),.tb-ov th:nth-child(6),.tb-ov td:nth-child(6),.tb-ov th:nth-child(8),.tb-ov td:nth-child(8){display:none;}
+  /* 通路拆解只留 勾選／通路／營收／佔比／淨利率 */
   .tb-ch{min-width:0!important;}
-  .tb-ch th:nth-child(6),.tb-ch td:nth-child(6),.tb-ch th:nth-child(9),.tb-ch td:nth-child(9),.tb-ch th:nth-child(10),.tb-ch td:nth-child(10){display:none;}
+  .tb-ch th:nth-child(5),.tb-ch td:nth-child(5),.tb-ch th:nth-child(6),.tb-ch td:nth-child(6),.tb-ch th:nth-child(7),.tb-ch td:nth-child(7),.tb-ch th:nth-child(9),.tb-ch td:nth-child(9),.tb-ch th:nth-child(10),.tb-ch td:nth-child(10){display:none;}
+  /* 成本資料庫只留 商品名稱／規格／單位成本／編輯 */
+  .tb-cost{min-width:0!important;}
+  .tb-cost th,.tb-cost td{padding-left:6px!important;padding-right:6px!important;}
+  .tb-cost th:nth-child(3),.tb-cost td:nth-child(3),.tb-cost th:nth-child(4),.tb-cost td:nth-child(4),.tb-cost th:nth-child(5),.tb-cost td:nth-child(5){display:none;}
   .tb-ord{min-width:0!important;}
   .tb-ord th:nth-child(4),.tb-ord td:nth-child(4),.tb-ord th:nth-child(6),.tb-ord td:nth-child(6),.tb-ord th:nth-child(7),.tb-ord td:nth-child(7){display:none;}
   .tb-ord-sl{min-width:0!important;}
@@ -9417,7 +9424,9 @@ function ProfitCenter() {
                       borderRadius: 12,
                     }}
                   >
+                    {/* 手機隱藏銷量／淨利貢獻／毛利率，留商品名稱·規格·單位成本（補成本才是手機會做的事） */}
                     <table
+                      className="tb-cost"
                       style={{
                         width: "100%",
                         borderCollapse: "collapse",
