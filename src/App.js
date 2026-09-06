@@ -473,6 +473,33 @@ const useDebounced = (value, delay = 200) => {
   return v;
 };
 
+/* 窄螢幕（手機）判定：只給「CSS 改不動」的東西用——圖表要吃 width/height 數字。
+   桌機一律回 false，走的是和以前完全一樣的那條路徑（老闆 2026-09-06：電腦版不動）。
+   版面壓縮一律寫在 CSS 的 @media(max-width:600px) 裡，不要在這裡長條件。 */
+const useIsNarrow = (q = "(max-width:600px)") => {
+  const [v, setV] = useState(
+    () => typeof window !== "undefined" && !!window.matchMedia?.(q).matches
+  );
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const m = window.matchMedia(q);
+    const on = () => setV(m.matches);
+    setV(m.matches);
+    /* Safari 14 以前只有 addListener */
+    if (m.addEventListener) m.addEventListener("change", on);
+    else m.addListener(on);
+    /* resize 是保險絲：手機轉向、或某些環境沒送出 change 事件時仍會校正
+       （值相同時 React 自己會跳過重繪，不會多跑） */
+    window.addEventListener("resize", on);
+    return () => {
+      if (m.removeEventListener) m.removeEventListener("change", on);
+      else m.removeListener(on);
+      window.removeEventListener("resize", on);
+    };
+  }, [q]);
+  return v;
+};
+
 /* ─── CSS ─────────────────────────────────────────────────────── */
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
@@ -549,6 +576,52 @@ tr.rl:hover td{background:var(--row-loss)!important;}
 .iw{border-color:var(--wn)!important;}
 .iok{border-color:var(--up-bdr)!important;}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}}
+/* ─── 行動版版面（≤600px）─────────────────────────────────────────
+   老闆 2026-09-06：「手機不需要的可以省略，電腦版不動」。
+   所有規則都關在這個 media query 裡，桌機（>600px）完全不受影響。
+   五個原則：①匯入／重置手機用不到＝隱藏，參數側欄移到資料下面
+   ②外框與卡片內距減半 ③大字降一級 ④圖表縮進容器（圓餅另由 narrow 判斷換小尺寸）
+   ⑤寬表格隱藏次要欄。要恢復哪一項就刪掉對應那行。 */
+@media(max-width:600px){
+  .page-wrap{padding:12px 12px 48px!important;}
+  .hd-wrap{padding:8px 12px!important;gap:6px!important;}
+  .hd-sub{display:none!important;}
+  /* 卡片內距 24→14。比對的是 inline style 字串，日後若把 padding 改成別的值，
+     這幾行會靜靜失效（不會壞版面），那時同步改這裡的數字即可 */
+  .page-wrap [style*="padding: 24px"]{padding:14px!important;}
+  .page-wrap [style*="padding: 22px 24px"]{padding:14px!important;}
+  .page-wrap [style*="padding: 32px 36px"]{padding:18px 14px!important;}
+  .page-wrap [style*="padding: 28px 36px"]{padding:16px 14px!important;}
+  .page-wrap [style*="padding: 20px 22px"]{padding:12px 14px!important;}
+  .page-wrap [style*="padding: 18px 24px"]{padding:14px!important;}
+  .hero-row{gap:14px!important;margin-bottom:14px!important;}
+  .hero-num{font-size:clamp(30px,8.5vw,40px);}
+  .hero-num-md{font-size:clamp(28px,8vw,34px);}
+  .hero-pct{font-size:26px;}
+  .hero-pct-md{font-size:24px;}
+  /* 匯入報表、重置本期＝手機不做的事 */
+  .imp-zone,.reset-row{display:none!important;}
+  /* 參數側欄移到資料下面（手機一進來先看到數字，不是設定） */
+  .side-col{order:2;margin-top:14px;}
+  /* 圓餅置中；圖例改兩欄、金額省略（金額在下面各平台卡片都有） */
+  .pie-box{margin:2px auto 0!important;align-self:center!important;}
+  .ch-legend{display:grid!important;grid-template-columns:1fr 1fr;gap:5px 10px!important;}
+  .lg-amt{display:none!important;}
+  /* 趨勢圖圖例：允許換行，避免「淨利」被擠成一個字一行 */
+  .trend-legend{flex-wrap:wrap!important;gap:4px 12px!important;}
+  .trend-legend>span{white-space:nowrap;}
+  /* 寬表格：手機隱藏次要欄並解除 minWidth，讓主要欄位擠進畫面 */
+  .tb-ov{min-width:0!important;}
+  .tb-ov th:nth-child(5),.tb-ov td:nth-child(5),.tb-ov th:nth-child(8),.tb-ov td:nth-child(8){display:none;}
+  .tb-ch{min-width:0!important;}
+  .tb-ch th:nth-child(6),.tb-ch td:nth-child(6),.tb-ch th:nth-child(9),.tb-ch td:nth-child(9),.tb-ch th:nth-child(10),.tb-ch td:nth-child(10){display:none;}
+  .tb-ord{min-width:0!important;}
+  .tb-ord th:nth-child(4),.tb-ord td:nth-child(4),.tb-ord th:nth-child(6),.tb-ord td:nth-child(6),.tb-ord th:nth-child(7),.tb-ord td:nth-child(7){display:none;}
+  .tb-ord-sl{min-width:0!important;}
+  .tb-ord-sl th:nth-child(3),.tb-ord-sl td:nth-child(3),.tb-ord-sl th:nth-child(4),.tb-ord-sl td:nth-child(4),.tb-ord-sl th:nth-child(5),.tb-ord-sl td:nth-child(5){display:none;}
+  .tb-ord-sp{min-width:0!important;}
+  .tb-ord-sp th:nth-child(4),.tb-ord-sp td:nth-child(4),.tb-ord-sp th:nth-child(5),.tb-ord-sp td:nth-child(5),.tb-ord-sp th:nth-child(6),.tb-ord-sp td:nth-child(6){display:none;}
+}
 `;
 
 /* ─── Small UI Components ──────────────────────────────────────── */
@@ -1649,7 +1722,9 @@ function POSDashboard({
           </div>
         </div>
         <div style={{ overflowX: "auto" }}>
+          {/* tb-ch：手機隱藏客單／成本覆蓋／開票三欄（見 CSS 行動版區塊） */}
           <table
+            className="tb-ch"
             style={{ width: "100%", borderCollapse: "collapse", minWidth: 680 }}
           >
             <thead>
@@ -1917,7 +1992,11 @@ function POSDashboard({
             borderRadius: 12,
           }}
         >
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+          {/* tb-ord：手機隱藏備註／成本／毛利三欄，留單號·通路·商品·營收·淨利·發票 */}
+          <table
+            className="tb-ord"
+            style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}
+          >
             <thead>
               <tr>
                 <SortTh sortKey="date" currentSort={sort} onSort={onSort}>
@@ -2271,6 +2350,7 @@ function OverviewDashboard({
   const slD = slData?.summary;
   const spS = spData?.s;
   const isDark = theme === "dark";
+  const narrow = useIsNarrow();
   const greenC = isDark ? "#2ECC71" : "#1A6B3C";
   const spC = isDark ? "#FF6533" : "#EE4D2D";
   const posC = isDark ? "#9B7FCA" : "#7B5EA7";
@@ -2695,10 +2775,15 @@ function OverviewDashboard({
     { l: "門市（現場零售）", c: posC, op: 0.9, v: posRetail?.rev || 0 },
     ...posOthers.map((c) => ({ l: c.label, c: chColor(c), op: 1, v: c.rev || 0 })),
   ].filter((d) => d.v > 0);
+  /* 手機把整個環縮一號，外圈標籤才不會被螢幕切掉（桌機維持 320×180 原尺寸） */
+  const pieW = narrow ? 300 : 320;
+  const pieH = narrow ? 168 : 180;
+  const pieIR = narrow ? 42 : 50;
+  const pieOR = narrow ? 62 : 74;
   const RAD = Math.PI / 180;
   const renderPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }) => {
     if (!(percent >= 0.04)) return null;
-    const r = outerRadius + 12;
+    const r = outerRadius + (narrow ? 10 : 12);
     const x = cx + Math.cos(-midAngle * RAD) * r;
     const y = cy + Math.sin(-midAngle * RAD) * r;
     return (
@@ -2803,6 +2888,7 @@ function OverviewDashboard({
           </div>
 
           <div
+            className="hero-row"
             style={{
               display: "flex",
               flexWrap: "wrap",
@@ -2942,10 +3028,11 @@ function OverviewDashboard({
                 直接標籤留位（最長「門市 38.2%」），環在正中；視窗窄時自動換行到下一列 */}
             {pieData.length > 0 && (
               <div
+                className="pie-box"
                 style={{
                   position: "relative",
-                  width: 320,
-                  height: 180,
+                  width: pieW,
+                  height: pieH,
                   flex: "0 0 auto",
                   marginLeft: "auto",
                   alignSelf: "center",
@@ -2955,15 +3042,15 @@ function OverviewDashboard({
                   .map((d) => `${d.l} ${((d.v / totalRev) * 100).toFixed(1)}%`)
                   .join("、")}`}
               >
-                <RPieChart width={320} height={180}>
+                <RPieChart width={pieW} height={pieH}>
                   <Pie
                     data={pieData}
                     dataKey="v"
                     nameKey="l"
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={74}
+                    innerRadius={pieIR}
+                    outerRadius={pieOR}
                     paddingAngle={1.5}
                     stroke="var(--s1)"
                     strokeWidth={2}
@@ -3024,12 +3111,12 @@ function OverviewDashboard({
                     }}
                   />
                 </RPieChart>
-                {/* 環中心：合計營收 */}
+                {/* 環中心：合計營收（位置由圓餅尺寸算，手機縮圖也對得準） */}
                 <div
                   style={{
                     position: "absolute",
-                    left: 160 - 46,
-                    top: 90 - 16,
+                    left: pieW / 2 - 46,
+                    top: pieH / 2 - 16,
                     width: 92,
                     textAlign: "center",
                     pointerEvents: "none",
@@ -3101,6 +3188,7 @@ function OverviewDashboard({
             {/* 圖例：官網／蝦皮／門市（現場零售）／經銷／電話／Omnichat／合作／企業 ＝ 8 項全列，
                 沒營收也列；色＝圓餅、進度條同一張表 */}
             <div
+              className="ch-legend"
               style={{
                 display: "flex",
                 flexWrap: "wrap",
@@ -3145,7 +3233,10 @@ function OverviewDashboard({
                     <span style={{ fontFamily: mono, color: empty ? "var(--t4)" : p.c }}>
                       {(share * 100).toFixed(1)}%
                     </span>
-                    <span style={{ color: "var(--t4)" }}>{empty ? "—" : fmt$(p.v)}</span>
+                    {/* 金額在手機隱藏（.lg-amt）：下面各平台卡片與通路卡片都看得到 */}
+                    <span className="lg-amt" style={{ color: "var(--t4)" }}>
+                      {empty ? "—" : fmt$(p.v)}
+                    </span>
                   </div>
                 );
               })}
@@ -3499,7 +3590,9 @@ function OverviewDashboard({
             </button>
           </div>
           <div style={{ overflowX: "auto" }}>
+            {/* tb-ov：手機隱藏客單／開票兩欄 */}
             <table
+              className="tb-ov"
               style={{ width: "100%", borderCollapse: "collapse", minWidth: 640 }}
             >
               <thead>
@@ -3755,6 +3848,7 @@ function OverviewDashboard({
             <TrendingUp size={14} color="var(--t3)" /> 月度營收與淨利趨勢
           </div>
           <div
+            className="trend-legend"
             style={{
               fontSize: 11,
               color: "var(--t3)",
@@ -9931,6 +10025,7 @@ function ProfitCenter() {
         }}
       >
         <div
+          className="hd-wrap"
           style={{
             maxWidth: 1560,
             margin: "0 auto",
@@ -9976,6 +10071,7 @@ function ProfitCenter() {
                 利潤決策中心
               </h1>
               <div
+                className="hd-sub"
                 style={{
                   fontSize: 10,
                   color: "var(--t3)",
@@ -10141,12 +10237,13 @@ function ProfitCenter() {
       </header>
 
       <div
+        className="page-wrap"
         style={{ maxWidth: 1560, margin: "0 auto", padding: "20px 24px 80px" }}
       >
         <div className={isOverview ? "" : "gm"}>
-          {/* Sidebar */}
+          {/* Sidebar（手機版靠 .side-col 移到資料下面） */}
           <aside
-            className="f0"
+            className="f0 side-col"
             style={{ display: isOverview ? "none" : undefined }}
           >
             <div
@@ -10163,8 +10260,9 @@ function ProfitCenter() {
                 gap: 12,
               }}
             >
-              {/* Upload */}
+              {/* Upload（手機隱藏：報表檔在電腦上，手機不匯入） */}
               <div
+                className="imp-zone"
                 role="button"
                 tabIndex={0}
                 aria-label={`匯入${
@@ -10423,8 +10521,8 @@ function ProfitCenter() {
                 />
               )}
 
-              {/* Reset */}
-              <div style={{ display: "flex", gap: 6 }}>
+              {/* Reset（手機隱藏：清除訂單是破壞性操作，不在手機上做） */}
+              <div className="reset-row" style={{ display: "flex", gap: 6 }}>
                 <Btn
                   v="primary"
                   onClick={() => {
@@ -11822,7 +11920,9 @@ function ProfitCenter() {
                       borderRadius: 12,
                     }}
                   >
+                    {/* 手機隱藏通路費用／成本／毛利三欄（官網 6 欄、蝦皮 7 欄，欄序不同用兩支 class） */}
                     <table
+                      className={isSL ? "tb-ord-sl" : "tb-ord-sp"}
                       style={{
                         width: "100%",
                         borderCollapse: "collapse",
