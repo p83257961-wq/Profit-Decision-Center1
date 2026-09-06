@@ -599,6 +599,8 @@ tr.rl:hover td{background:var(--row-loss)!important;}
   .hero-num-md{font-size:clamp(28px,8vw,34px);}
   .hero-pct{font-size:26px;}
   .hero-pct-md{font-size:24px;}
+  /* Hero 右側那組（淨利率／目標）換行後靠左，才和上面的大字切齊 */
+  .hero-side{text-align:left!important;}
   /* 匯入報表、重置本期＝手機不做的事 */
   .imp-zone,.reset-row{display:none!important;}
   /* 參數側欄移到資料下面（手機一進來先看到數字，不是設定） */
@@ -612,12 +614,16 @@ tr.rl:hover td{background:var(--row-loss)!important;}
   .trend-legend>span{white-space:nowrap;}
   /* 寬表格：手機隱藏次要欄並解除 minWidth，讓主要欄位擠進畫面 */
   .tb-ov th,.tb-ov td,.tb-ch th,.tb-ch td,.tb-ord th,.tb-ord td,.tb-ord-sl th,.tb-ord-sl td,.tb-ord-sp th,.tb-ord-sp td{padding-left:6px!important;padding-right:6px!important;}
-  /* 六通路表只留 通路／營收／佔全公司／淨利率——不用右滑就看得到淨利率（09-06 手機實測補的） */
+  /* 六通路表只留 通路／營收／佔全公司／淨利率——不用右滑就看得到淨利率（09-06 手機實測補的）。
+     通路欄桌機有 min-width:150（給長條圖），手機解掉並允許換行，否則整張表撐到 330px、
+     淨利率會被卡片邊緣切掉（卡片內容寬只有 321px，不是視窗的 375） */
   .tb-ov{min-width:0!important;}
   .tb-ov th:nth-child(4),.tb-ov td:nth-child(4),.tb-ov th:nth-child(5),.tb-ov td:nth-child(5),.tb-ov th:nth-child(6),.tb-ov td:nth-child(6),.tb-ov th:nth-child(8),.tb-ov td:nth-child(8){display:none;}
-  /* 通路拆解只留 勾選／通路／營收／佔比／淨利率 */
+  .tb-ov td:first-child{min-width:0!important;white-space:normal!important;}
+  /* 通路拆解只留 勾選／通路／營收／淨利率（佔比在總覽的六通路表看得到，手機讓位給淨利率） */
   .tb-ch{min-width:0!important;}
-  .tb-ch th:nth-child(5),.tb-ch td:nth-child(5),.tb-ch th:nth-child(6),.tb-ch td:nth-child(6),.tb-ch th:nth-child(7),.tb-ch td:nth-child(7),.tb-ch th:nth-child(9),.tb-ch td:nth-child(9),.tb-ch th:nth-child(10),.tb-ch td:nth-child(10){display:none;}
+  .tb-ch th:nth-child(4),.tb-ch td:nth-child(4),.tb-ch th:nth-child(5),.tb-ch td:nth-child(5),.tb-ch th:nth-child(6),.tb-ch td:nth-child(6),.tb-ch th:nth-child(7),.tb-ch td:nth-child(7),.tb-ch th:nth-child(9),.tb-ch td:nth-child(9),.tb-ch th:nth-child(10),.tb-ch td:nth-child(10){display:none;}
+  .tb-ch td:nth-child(2){white-space:normal!important;}
   /* 成本資料庫只留 商品名稱／規格／單位成本／編輯 */
   .tb-cost{min-width:0!important;}
   .tb-cost th,.tb-cost td{padding-left:6px!important;padding-right:6px!important;}
@@ -1536,7 +1542,8 @@ function POSDashboard({
             </div>
             <PeriodCompare monthly={monthly} sY={sY} sM={sM} />
           </div>
-          <div style={{ textAlign: "right" }}>
+          {/* hero-side：桌機靠右（在 Hero 列右端），手機換行後改靠左才與上面的大字對齊 */}
+          <div className="hero-side" style={{ textAlign: "right" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "var(--t3)" }}>
               淨利率
             </div>
@@ -10875,7 +10882,8 @@ function ProfitCenter() {
                             sM={effM}
                           />
                         </div>
-                        <div style={{ textAlign: "right" }}>
+                        {/* hero-side：桌機靠右，手機換行後改靠左（見 CSS 行動版區塊） */}
+                        <div className="hero-side" style={{ textAlign: "right" }}>
                           <div
                             style={{
                               fontSize: 12,
@@ -11415,7 +11423,8 @@ function ProfitCenter() {
                             sM={effM}
                           />
                         </div>
-                        <div style={{ textAlign: "right" }}>
+                        {/* hero-side：桌機靠右，手機換行後改靠左（見 CSS 行動版區塊） */}
+                        <div className="hero-side" style={{ textAlign: "right" }}>
                           <div
                             style={{
                               fontSize: 12,
